@@ -1,7 +1,6 @@
 import sys
 
 
-
 def run(equation_line):
     try:
         left, right = parse_equation(equation_line)
@@ -14,7 +13,6 @@ def run(equation_line):
 def reduce(left, right):
     coeffs = {}
     for power, coeff in left.items():
-        # put left side to the scale
         coeffs[power] = coeffs.get(power, 0) + coeff
         
     for power, coeff in right.items():
@@ -33,11 +31,9 @@ def parse_equation(equation_string):
 
 
 def parse_side(side_str):
-    # Standardize the string to uppercase and remove spaces
     side_str = side_str.replace(" ", "").upper()
     terms = {}
     
-    # Handle subtraction by replacing '-' with '+-'
     side_str = side_str.replace("-", "+-")
     raw_terms = side_str.split("+")
     
@@ -45,23 +41,18 @@ def parse_side(side_str):
         if term == "":
             continue
             
-        # Check if the term has the strict "*X^" format
         if "*X^" not in term:
-            # FALLBACK: Is it a bare number like the '0' after the '=' sign?
             try:
                 coeff = float(term)
-                power = 0  # A bare number mathematically has an X^0 power
+                power = 0  
             except ValueError:
-                # If it's not a valid number either, throw the strict error
                 print(f"Error: Invalid format in term '{term}'. Expected a * X^p or a constant.")
                 sys.exit(1)
         else:
-            # If it has the correct format, split and extract
             parts = term.split('*X^')
             coeff = float(parts[0])
             power = int(parts[1])
             
-        # Add the parsed term to our dictionary
         terms[power] = terms.get(power, 0) + coeff
         
     return terms
@@ -77,11 +68,9 @@ def get_degree(coeffs):
 def print_reduced(coeffs):
     terms = []
     for power in sorted(coeffs.keys()):
-        # --- THE FIX: Round away floating point noise ---
         coeff = round(coeffs[power], 6)
         
         if coeff != 0:
-            # If it is a clean integer (e.g., 5.0), convert to int (5)
             if coeff.is_integer():
                 coeff = int(coeff)
             terms.append(f"{coeff} * X^{power}")
@@ -94,7 +83,6 @@ def print_reduced(coeffs):
         print(f"Reduced form: {equation_str} = 0")
 
 def gcd(a, b):
-    # We use absolute values because signs don't matter for finding the divisor
     a = abs(int(a))
     b = abs(int(b))
     while b != 0:
@@ -104,33 +92,17 @@ def gcd(a, b):
     return a
 
 def my_sqrt(n):
-    # Edge case 1: Negative numbers don't have real square roots
-    if n < 0:
-        return -1.0 # Or you can raise an Exception, depending on how you want to handle it
-        
-    # Edge case 2: The square root of 0 is 0
     if n == 0:
         return 0.0
         
-    # Step 1: Start with a reasonable guess (half the number is a safe start)
     guess = n / 2.0
-    
-    # We loop up to 100 times, though it usually finds the answer in less than 10
+    precision = 0.00001
     for _ in range(100):
-        # Step 2 & 3 & 4: Calculate the average of the guess and (n / guess)
         new_guess = (guess + (n / guess)) / 2.0
         
-        # If the new guess is practically identical to the old guess, we found it!
-        # We check if the difference is tiny (e.g., less than 0.00001)
-        # We don't use `==` because floating-point math can be slightly imprecise
-        difference = guess - new_guess
-        if difference < 0: # Make sure difference is positive (absolute value)
-            difference = -difference
+        if abs(guess - new_guess) < precision:
+            return new_guess
             
-        if difference < 0.000001:
-            break
-            
-        # Update the guess for the next loop
         guess = new_guess
         
     return guess
@@ -181,12 +153,10 @@ def solve_degree2(coeffs):
         print("Discriminant is strictly negative, the two complex solutions are:")
         sqrt_d = my_sqrt(-delta)
         
-        # --- THE FIX: Round away the floating point noise first! ---
         r_num = round(-b, 6)
         i_num = round(sqrt_d, 6)
         denom = round(2 * a, 6)
         
-        # Now the integer check will work perfectly
         if r_num.is_integer() and i_num.is_integer() and denom.is_integer():
             g_real = gcd(r_num, denom)
             g_imag = gcd(i_num, denom)
