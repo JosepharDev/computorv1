@@ -44,7 +44,7 @@ def parse_side(side_str):
         if "*X^" not in term:
             try:
                 coeff = float(term)
-                power = 0  
+                power = 0
             except ValueError:
                 print(f"Error: Invalid format in term '{term}'. Expected a * X^p or a constant.")
                 sys.exit(1)
